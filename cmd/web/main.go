@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"flag"
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
@@ -21,9 +22,10 @@ const (
 )
 
 type application struct {
-	errorLog *log.Logger
-	infoLog  *log.Logger
-	snippets *mysql.SnippetModel
+	errorLog      *log.Logger
+	infoLog       *log.Logger
+	snippets      *mysql.SnippetModel
+	templateCache map[string]*template.Template
 }
 
 func openDB(dsn string) (*sql.DB, error) {
@@ -56,10 +58,18 @@ func main() {
 	}
 	defer db.Close()
 
+	// Initialize template cache
+	templateCache, err := newTemplateCache("./ui/html/")
+	if err != nil {
+		errorLog.Fatal(err)
+	}
+
+	// application dependencies
 	app := &application{
-		errorLog: errorLog,
-		infoLog:  infoLog,
-		snippets: &mysql.SnippetModel{DB: db},
+		errorLog:      errorLog,
+		infoLog:       infoLog,
+		snippets:      &mysql.SnippetModel{DB: db},
+		templateCache: templateCache,
 	}
 
 	srv := &http.Server{
