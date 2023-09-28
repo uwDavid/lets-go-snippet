@@ -6,12 +6,17 @@ import (
 	"net/http"
 	"runtime/debug"
 	"time"
+	"uwDavid/snippetbox/pkg/models"
 
 	"github.com/justinas/nosurf"
 )
 
-func (app *application) authenticatedUser(r *http.Request) int {
-	return app.session.GetInt(r, "userID")
+func (app *application) authenticatedUser(r *http.Request) *models.User {
+	user, ok := r.Context().Value(contextKeyUser).(*models.User)
+	if !ok {
+		return nil
+	}
+	return user
 }
 
 // serverError helper writes error + stack trace to errorLog using debug.Stack()
